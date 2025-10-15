@@ -2593,6 +2593,7 @@ name = "rust-habits"
 version = "0.1.0"
 dependencies = [
  "iced",
+ "once_cell",
  "rusqlite",
 ]
 

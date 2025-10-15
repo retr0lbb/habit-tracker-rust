@@ -1,18 +1,32 @@
-use rusqlite::{Connection, Result};
+use std::sync::Mutex;
 
-pub fn connect()->Result<()>{
-    let conn = Connection::open("habit-db.db")?;
+use rusqlite::{Connection};
+use once_cell::sync::Lazy;
 
-    println!("Conectado com a base de dados");
-    print!("{:?}", conn);
 
-    let _ = conn.execute("CREATE TABLE IF NOT EXISTS habits(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        isComplete BOOLEAN NOT NULL DEFAULT 0
-    )", []);
 
-    println!("TABELA CRIADA COM SUCESSO");
 
-    Ok(())
+pub static DB: Lazy<Mutex<Connection>> = Lazy::new(|| {
+    let conn = Connection::open("habit-db.db").expect("Erro ao ler banco de dados");
+
+    Mutex::new(conn)
+});
+
+
+pub fn get() -> std::sync::MutexGuard<'static, Connection>{
+    DB.lock().unwrap()
+}
+
+
+pub fn setup(){
+    let conn = get();
+
+    conn.execute( "CREATE TABLE IF NOT EXISTS habits (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL,
+                desc TEXT,
+                is_complete BOOLEAN NOT NULL
+            )", []).unwrap();
+
+    println!("Tabela criada com sucesso")
 }
