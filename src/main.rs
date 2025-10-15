@@ -1,5 +1,8 @@
-use iced::{widget::{button, text}};
+mod db;
+
+use iced::widget::{button, column, text};
 use iced::Element;
+use db::{database::connect};
 
 #[derive(Debug, Clone)]
 enum Message{
@@ -8,7 +11,7 @@ enum Message{
 }
 
 
-fn update(counter: &mut u64, message: Message){
+fn update(counter: &mut i32, message: Message){
     match message {
         Message::Increment => *counter += 1,
         Message::Decrement => *counter -= 1,
@@ -16,10 +19,16 @@ fn update(counter: &mut u64, message: Message){
 }
 
 
-fn view(counter: &u64) -> Element<Message> {
-    button(text(*counter)).on_press(Message::Increment).into()
+fn view(counter: &i32) -> Element<Message> {
+    column![
+        text(counter).size(20),
+        button("Increment").on_press(Message::Increment),
+        button("Decrement").on_press(Message::Decrement),
+    ].spacing(10).into()
+
+    
 }
 
-pub fn main() -> iced::Result {
-    iced::run("A cool counter", update, view)
+pub fn main() {
+    connect();
 }
