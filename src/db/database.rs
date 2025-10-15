@@ -4,8 +4,6 @@ use rusqlite::{Connection};
 use once_cell::sync::Lazy;
 
 
-
-
 pub static DB: Lazy<Mutex<Connection>> = Lazy::new(|| {
     let conn = Connection::open("habit-db.db").expect("Erro ao ler banco de dados");
 
