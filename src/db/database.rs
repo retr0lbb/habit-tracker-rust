@@ -1,31 +1,42 @@
 use std::sync::Mutex;
-
-use rusqlite::{Connection};
+use postgres::{Client, NoTls};
 use once_cell::sync::Lazy;
 
 
-pub static DB: Lazy<Mutex<Connection>> = Lazy::new(|| {
-    let conn = Connection::open("habit-db.db").expect("Erro ao ler banco de dados");
+pub static DB: Lazy<Mutex<Client>> = Lazy::new(|| {
+    let client = Client::connect("host=localhost user=docker password=docker dbname=habits", NoTls)
+        .expect("Erro ao se conectar com o banco de dados");
 
-    Mutex::new(conn)
+    Mutex::new(client)
 });
 
 
-pub fn get() -> std::sync::MutexGuard<'static, Connection>{
+pub fn get() -> std::sync::MutexGuard<'static, Client>{
     DB.lock().unwrap()
 }
 
 
 pub fn setup(){
-    let conn = get();
-    conn.execute("DROP TABLE IF EXISTS habits", []).unwrap();
+    let mut conn = get();
+    conn.batch_execute(
+        "
+        DROP TABLE IF EXISTS completions;
+        DROP TABLE IF EXISTS habits;
 
-    conn.execute( "CREATE TABLE IF NOT EXISTS habits (
-                id INTEGER PRIMARY KEY,
-                name TEXT NOT NULL,
-                desc TEXT,
-                weekly_frequency INTEGER NOT NULL
-            )", []).unwrap();
+        CREATE TABLE IF NOT EXISTS habits (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT,
+            weekly_frequency INTEGER NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS completions (
+            id SERIAL PRIMARY KEY,
+            habit_id INTEGER REFERENCES habits(id) ON DELETE CASCADE,
+            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        ",
+    ).expect("Erro ao criar as tabelas");
 
     println!("Tabela criada com sucesso")
 }

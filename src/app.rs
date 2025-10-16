@@ -1,4 +1,4 @@
-use iced::widget::{button, column, text, text_input};
+use iced::widget::{button, column, row, text, text_input, Row};
 use iced::{Element};
 use crate::services::createHabit::{self, listHabits};
 
@@ -41,12 +41,12 @@ pub struct ApplicationState {
 pub fn update(state: &mut ApplicationState, message: Message){
     match message {
         Message::Close => {
-                                std::process::exit(0);
+                    std::process::exit(0);
                     },
         Message::SubmitHabitCreation() => {
                     createHabit::createHabit(state.habit.clone());
                     print!("Tasks where create successfully");
-                    state.habit = Habit::default()
+                    state.habit = Habit::default();
                 },
         Message::NameInputChange(name) => state.habit.name = name,
         Message::DescInputChange(desc) => state.habit.desc = desc,
@@ -61,6 +61,7 @@ pub fn update(state: &mut ApplicationState, message: Message){
                 }
             },
         Message::GetHabits => {
+            print!("PEgando os dados do banco de dados");
             match listHabits() {
                 Ok(habits) => state.habits = habits,
                 Err(err) => eprintln!("Erro ao buscar habitos: {}", err)
@@ -84,8 +85,14 @@ pub fn view(state: &ApplicationState) -> Element<Message> {
             .into()
         })
         .collect::<Vec<Element<Message>>>();
+
+    let left_column = column![
+        button("Get habits").on_press(Message::GetHabits),
+        text("Your habits:"),
+        column(habit_list).spacing(5),
+    ].spacing(10);
     
-    column![
+    let right_colum = column![
         button("Close APP").on_press(Message::Close),
 
         text_input("Habit Name", &state.habit.name)
@@ -98,10 +105,8 @@ pub fn view(state: &ApplicationState) -> Element<Message> {
             .on_input(Message::FrequencyInputChange),
 
         button("Submit").on_press(Message::SubmitHabitCreation()),
-        button("Get habits").on_press(Message::GetHabits),
 
-        text("Your habits:"),
-        column(habit_list).spacing(5),
+    ].spacing(10);
 
-    ].spacing(10).into()
+    row![left_column, right_colum].spacing(10).into()
 }

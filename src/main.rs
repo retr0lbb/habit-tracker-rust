@@ -8,6 +8,11 @@ use app::view;
 
 
 pub fn main() -> iced::Result{
-    db::database::setup();
-    iced::application("Habit tracker", update, view).theme(|_s| iced::Theme::KanagawaDragon).run()
+    if std::env::args().any(|a| a == "--reset-db") {
+        db::database::setup();
+    }
+
+    iced::application("Habit tracker", update, view)
+        .theme(|_s| iced::Theme::GruvboxDark)
+        .run()
 }

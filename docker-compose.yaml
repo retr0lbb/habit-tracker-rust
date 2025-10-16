@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: bitnami/postgresql:latest
+    container_name: rust_pg
+    environment:
+      - POSTGRESQL_USERNAME=docker
+      - POSTGRESQL_PASSWORD=docker
+      - POSTGRESQL_DATABASE=habits
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/bitnami/postgresql
+
+volumes:
+  postgres_data:
+    name: rust_habits_pgdata

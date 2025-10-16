@@ -4,34 +4,34 @@ use rusqlite::Result;
 use crate::{app::Habit, db::database::get};
 
 pub fn createHabit(habit: Habit){
-    let database_instance: std::sync::MutexGuard<'static, rusqlite::Connection> = get();
+    let mut database_instance= get();
 
     database_instance.execute(
         "INSERT INTO habits 
-        (name, desc, weekly_frequency) 
+        (name, description, weekly_frequency) 
         VALUES 
-        (?1, ?2, ?3)", 
-    params![habit.name, habit.desc, habit.weekly_frequency]).expect("Erro ao inserir dados ");
+        ($1, $2, $3)", 
+    &[&habit.name, &habit.desc, &(habit.weekly_frequency as i32)],
+    ).expect("Erro ao inserir dados ");
 }
 
 pub fn listHabits() -> Result<Vec<Habit>>{
-    let database_instance = get();
-    
-    let mut stmt = database_instance.prepare(
-        "SELECT id, name, desc, weekly_frequency FROM habits"
-    ).unwrap();
+    let mut database_instance = get();
 
+    let mut habits: Vec<Habit> = Vec::new();
 
-    let habits_iter = stmt.query_map([], |row| {
-        Ok(Habit {
-            id: row.get(0)?,
-            name: row.get(1)?,
-            desc: row.get(2)?,
-            weekly_frequency: row.get(3)?,
-        })
-    })?;
+    for row in database_instance.query("SELECT id, name, description, weekly_frequency FROM habits", &[]).unwrap() {
+        print!("cade a coluna? {:?}", row);
 
-    let habits: Vec<Habit> = habits_iter.filter_map(|r|r.ok()).collect();
+       let habit = Habit {
+        id: row.get(0),
+        name: row.get(1),
+        desc: row.get(2),
+        weekly_frequency: row.get::<_, i32>(3) as u8
+       };
+
+       habits.push(habit);
+    }
 
     Ok(habits)
 }
