@@ -1,9 +1,10 @@
 use iced::widget::{button, column, text_input};
 use iced::{Element};
-use crate::services::createHabit;
+use crate::services::createHabit::{self, listHabits};
 
 #[derive(Debug, Clone)]
 pub struct Habit{
+    pub id: i32,
     pub name: String,
     pub desc: String,
     pub weekly_frequency: u8,
@@ -12,6 +13,7 @@ pub struct Habit{
 impl Default for Habit {
     fn default() -> Self {
         Habit {
+            id: 0,
             name: String::new(),
             desc: String::new(),
             weekly_frequency: 0,
@@ -25,7 +27,8 @@ pub enum Message {
     NameInputChange(String),
     DescInputChange(String),
     FrequencyInputChange(String),
-    SubmitHabitCreation()
+    SubmitHabitCreation(),
+    GetHabits
 }
 
 #[derive(Debug, Default)]
@@ -36,21 +39,22 @@ pub struct ApplicationState {
 pub fn update(state: &mut ApplicationState, message: Message){
     match message {
         Message::Close => {
-                    std::process::exit(0);
-                },
+                                std::process::exit(0);
+                    },
         Message::SubmitHabitCreation() => {
-                createHabit::createHabit(state.habit.clone());
-                print!("Tasks where create successfully")
-            },
+                    createHabit::createHabit(state.habit.clone());
+                    print!("Tasks where create successfully")
+                },
         Message::NameInputChange(name) => state.habit.name = name,
         Message::DescInputChange(desc) => state.habit.desc = desc,
         Message::FrequencyInputChange(frequency) => {
-            if frequency.len() <= 0 {
-                return;
-            }
-            let numbered_frequency = frequency.parse::<u8>().unwrap();
-            state.habit.weekly_frequency = numbered_frequency
-        },
+                if frequency.len() <= 0 {
+                    return;
+                }
+                let numbered_frequency = frequency.parse::<u8>().unwrap();
+                state.habit.weekly_frequency = numbered_frequency
+            },
+        Message::GetHabits => println!("{:?}", listHabits()),
     }
 }
 
@@ -67,6 +71,8 @@ pub fn view(state: &ApplicationState) -> Element<Message> {
         text_input("How many times a week?", &state.habit.weekly_frequency.to_string())
             .on_input(Message::FrequencyInputChange),
 
-        button("Submit").on_press(Message::SubmitHabitCreation())
+        button("Submit").on_press(Message::SubmitHabitCreation()),
+        button("Get habits").on_press(Message::GetHabits)
+
     ].spacing(10).into()
 }
