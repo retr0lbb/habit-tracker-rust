@@ -1,4 +1,4 @@
-use iced::widget::{button, column, text_input};
+use iced::widget::{button, column, text, text_input};
 use iced::{Element};
 use crate::services::createHabit::{self, listHabits};
 
@@ -28,12 +28,14 @@ pub enum Message {
     DescInputChange(String),
     FrequencyInputChange(String),
     SubmitHabitCreation(),
-    GetHabits
+    GetHabits,
+    HabitsLoaded(Vec<Habit>),
 }
 
 #[derive(Debug, Default)]
 pub struct ApplicationState {
-    pub habit: Habit
+    pub habit: Habit,
+    pub habits: Vec<Habit>
 }
 
 pub fn update(state: &mut ApplicationState, message: Message){
@@ -43,7 +45,8 @@ pub fn update(state: &mut ApplicationState, message: Message){
                     },
         Message::SubmitHabitCreation() => {
                     createHabit::createHabit(state.habit.clone());
-                    print!("Tasks where create successfully")
+                    print!("Tasks where create successfully");
+                    state.habit = Habit::default()
                 },
         Message::NameInputChange(name) => state.habit.name = name,
         Message::DescInputChange(desc) => state.habit.desc = desc,
@@ -51,14 +54,37 @@ pub fn update(state: &mut ApplicationState, message: Message){
                 if frequency.len() <= 0 {
                     return;
                 }
-                let numbered_frequency = frequency.parse::<u8>().unwrap();
-                state.habit.weekly_frequency = numbered_frequency
+                let only_digits: String = frequency.chars().filter(|c| c.is_ascii_digit()).collect();
+
+                if let Ok(numbered_frequency) = only_digits.parse::<u8>(){
+                    state.habit.weekly_frequency = numbered_frequency
+                }
             },
-        Message::GetHabits => println!("{:?}", listHabits()),
+        Message::GetHabits => {
+            match listHabits() {
+                Ok(habits) => state.habits = habits,
+                Err(err) => eprintln!("Erro ao buscar habitos: {}", err)
+            }
+        },
+        Message::HabitsLoaded(habits) => {
+            state.habits = habits;
+        }
     }
 }
 
 pub fn view(state: &ApplicationState) -> Element<Message> {
+    let habit_list = state
+        .habits
+        .iter()
+        .map(|h| {
+            text(format!(
+                "{} - {} ({}x/semana)",
+                h.name, h.desc, h.weekly_frequency
+            ))
+            .into()
+        })
+        .collect::<Vec<Element<Message>>>();
+    
     column![
         button("Close APP").on_press(Message::Close),
 
@@ -72,7 +98,10 @@ pub fn view(state: &ApplicationState) -> Element<Message> {
             .on_input(Message::FrequencyInputChange),
 
         button("Submit").on_press(Message::SubmitHabitCreation()),
-        button("Get habits").on_press(Message::GetHabits)
+        button("Get habits").on_press(Message::GetHabits),
+
+        text("Your habits:"),
+        column(habit_list).spacing(5),
 
     ].spacing(10).into()
 }

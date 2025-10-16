@@ -18,7 +18,7 @@ pub fn get() -> std::sync::MutexGuard<'static, Connection>{
 
 pub fn setup(){
     let conn = get();
-    conn.execute("DROP TABLE habits", []).unwrap();
+    conn.execute("DROP TABLE IF EXISTS habits", []).unwrap();
 
     conn.execute( "CREATE TABLE IF NOT EXISTS habits (
                 id INTEGER PRIMARY KEY,
