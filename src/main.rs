@@ -1,12 +1,13 @@
 mod db;
-mod ui;
 mod app;
+mod services;
 use app::update;
 use app::view;
 
 
 
+
 pub fn main() -> iced::Result{
     db::database::setup();
-    iced::run("Habit tracker RS", update, view)
+    iced::application("Habit tracker", update, view).theme(|_s| iced::Theme::KanagawaDragon).run()
 }
